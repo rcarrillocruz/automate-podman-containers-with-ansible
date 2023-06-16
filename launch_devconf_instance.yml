@@ -1,0 +1,15 @@
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Launch DevConf instance
+      amazon.aws.ec2_instance:
+        name: devconf
+        key_name: ricky
+        instance_type: t1.micro
+        security_group: default
+        network:
+          assign_public_ip: true
+        image_id: "{{ lookup('file', 'devconf_ami_id') }}"
+        state: started
+      register: ec2_instance_output

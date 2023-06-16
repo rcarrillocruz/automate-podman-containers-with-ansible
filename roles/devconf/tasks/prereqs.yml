@@ -1,0 +1,6 @@
+- ansible.builtin.dnf:
+    name: 
+      - podman
+      - slirp4netns
+    state: latest
+  become: true

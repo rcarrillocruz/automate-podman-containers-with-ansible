@@ -1,0 +1,16 @@
+- name: Stop and disable systemd service in user scope
+  ansible.builtin.systemd:
+    name: devconf.service
+    state: stopped
+    scope: user
+    enabled: false
+
+- name: Delete containerized application
+  containers.podman.podman_container:
+    name: devconf
+    state: absent
+
+- name: Delete application data volume
+  containers.podman.podman_volume:
+    name: app_data
+    state: absent

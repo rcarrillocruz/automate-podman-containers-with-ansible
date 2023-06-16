@@ -1,0 +1,53 @@
+- hosts: localhost
+
+  tasks:
+    - name: Launch temporary instance
+      amazon.aws.ec2_instance:
+        name: devconf-temporary
+        key_name: ricky
+        instance_type: t1.micro
+        security_group: default
+        network:
+          assign_public_ip: true
+        image_id: ami-013d87f7217614e10
+        state: started
+      register: ec2_instance_output
+                                               
+    - name: Add temporary instance to inventory at runtime
+      ansible.builtin.add_host:
+        name: devconf-temporary
+        ansible_user: ec2-user
+        ansible_host: "{{ ec2_instance_output.instances.0.public_ip_address }}"
+
+    - name: Import devconf code and run deploy on temporary instance
+      ansible.builtin.import_role:
+        name: devconf
+        tasks_from: prereqs
+      delegate_to: devconf-temporary
+
+    - name: Import devconf code and run deploy on temporary instance
+      ansible.builtin.import_role:
+        name: devconf
+        tasks_from: deploy
+      delegate_to: devconf-temporary
+      vars:
+        ansible_user_id: ec2-user
+        ansible_user_dir: /home/ec2-user
+
+    - name: Create AMI from temporary instance
+      amazon.aws.ec2_ami:
+        instance_id: "{{ ec2_instance_output.instances.0.instance_id }}"
+        wait: true
+        name: "devconf-ami-{{ ansible_date_time.epoch }}"
+      register: ec2_ami_output
+
+    - name: Delete temporary instance
+      amazon.aws.ec2_instance:
+        instance_ids: "{{ ec2_instance_output.instances.0.instance_id }}"
+        state: terminated
+        wait: false
+
+    - name: Copy AMI ID to file
+      ansible.builtin.copy:
+        content: "{{ ec2_ami_output.image_id }}"
+        dest: devconf_ami_id

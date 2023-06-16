@@ -1,0 +1,4 @@
+localhost ansible_connection=local
+
+[appservers]
+46.137.130.34 ansible_user=ec2-user

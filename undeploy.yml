@@ -1,0 +1,7 @@
+- hosts: appservers
+
+  tasks:
+    - name: Import devconf role and execute undeploy tasks
+      ansible.builtin.import_role:
+        name: devconf
+        tasks_from: undeploy 
